@@ -44,8 +44,28 @@ class MasterViewController: UITableViewController {
                 self.tableView.reloadData()
             }
         }
+        
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(self.handleRefresh(_:)), for: UIControlEvents.valueChanged)
+        refreshControl.tintColor = .white
+        
+        tableView.addSubview(refreshControl)
     }
-
+    
+    @objc func handleRefresh(_ refreshControl: UIRefreshControl) {
+        
+        networking.getTopPost(after: "") { articlesData in
+            self.articles = articlesData.children
+            if let after = articlesData.after {
+                self.nextPage = after
+            }
+            DispatchQueue.main.async {
+                self.tableView.reloadData()
+            }
+        }
+        refreshControl.endRefreshing()
+    }
+    
     override func viewWillAppear(_ animated: Bool) {
         clearsSelectionOnViewWillAppear = splitViewController!.isCollapsed
         super.viewWillAppear(animated)
@@ -64,16 +84,17 @@ class MasterViewController: UITableViewController {
                 let object = articles[indexPath.row] 
                 let controller = (segue.destination as! UINavigationController).topViewController as! DetailViewController
                 controller.articleData = object.data
+                controller.navigationItem.leftBarButtonItem = splitViewController?.displayModeButtonItem
+                controller.navigationItem.leftItemsSupplementBackButton = true
                 tableView.deselectRow(at: indexPath, animated: false)
             }
-            
         }
     }
 
     // MARK: - Table View
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 150
+        return 160
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {

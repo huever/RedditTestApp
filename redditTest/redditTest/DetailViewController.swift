@@ -50,14 +50,23 @@ class DetailViewController: UIViewController {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-
-    var detailItem: Article? {
-        didSet {
-            // Update the view.
-            configureView()
+    
+    @IBAction func saveImage(_ sender: Any) {
+        UIImageWriteToSavedPhotosAlbum(self.articleImage.image!, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
+    }
+    
+    @objc func image(_ image: UIImage, didFinishSavingWithError error: NSError?, contextInfo: UnsafeRawPointer) {
+        if let error = error {
+            // we got back an error!
+            let ac = UIAlertController(title: NSLocalizedString("Error", comment: ""), message: error.localizedDescription, preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))
+            present(ac, animated: true)
+        } else {
+            let ac = UIAlertController(title: NSLocalizedString("Saved!", comment: ""), message: NSLocalizedString("The screenshot has been saved to your photos.", comment: ""), preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))
+            present(ac, animated: true)
         }
     }
-
-
+    
 }
 
