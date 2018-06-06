@@ -36,6 +36,14 @@ struct ArticleData: Codable {
     let thumbnailWidth: Int?
     let thumbnail: String?
     let name: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case thumbnailHeight = "thumbnail_height"
+        case numComments = "num_comments"
+        case thumbnailWidth = "thumbnail_width"
+        case createdUTC = "created_utc"
+        case name, thumbnail, preview, id, author, url, title
+    }
 }
 
 struct Preview: Codable {

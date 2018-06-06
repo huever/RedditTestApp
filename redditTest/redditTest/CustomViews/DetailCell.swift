@@ -10,6 +10,13 @@ import UIKit
 
 class DetailCell: UITableViewCell {
 
+    @IBOutlet weak var title: UILabel!
+    @IBOutlet weak var articleDescription: UILabel!
+    @IBOutlet weak var created: UILabel!
+    @IBOutlet weak var comments: UILabel!
+    @IBOutlet weak var author: UILabel!
+    @IBOutlet weak var articleImage: UIImageView!
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code

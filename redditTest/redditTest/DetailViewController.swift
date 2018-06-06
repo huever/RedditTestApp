@@ -20,6 +20,8 @@ class DetailViewController: UIViewController {
                 label.text = detail.data.title
             }
         }
+        
+        self.title = detailItem?.data.title
     }
 
     override func viewDidLoad() {

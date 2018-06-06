@@ -20,7 +20,9 @@ class MasterViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
+        
+        tableView.register(UINib(nibName: "DetailCell", bundle: nil), forCellReuseIdentifier: "DetailCell")
         if let split = splitViewController {
             let controllers = split.viewControllers
             detailViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? DetailViewController
@@ -52,12 +54,18 @@ class MasterViewController: UITableViewController {
                 let object = articles[indexPath.row] 
                 let controller = (segue.destination as! UINavigationController).topViewController as! DetailViewController
                 controller.detailItem = object
+                tableView.deselectRow(at: indexPath, animated: false)
             }
+            
         }
     }
 
     // MARK: - Table View
-
+    
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 150
+    }
+    
     override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
@@ -67,15 +75,34 @@ class MasterViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "DetailCell", for: indexPath) as! DetailCell
 
-        let object = articles[indexPath.row]
+        let object = articles[indexPath.row].data
         
-        cell.textLabel!.text = object.data.title
+        cell.title.text = object.title
+        if let numComments = object.numComments {
+            cell.comments.text = String.init(format: NSLocalizedString("%d comments", comment: ""), numComments)
+        }
+        
+        
+        let dateFormatter = DateFormatter()
+        cell.created.text = dateFormatter.timeSince(from: NSDate(timeIntervalSince1970: TimeInterval(object.createdUTC!)), numericDates: true)
+        cell.author.text = object.author
+    
+        if let image = object.thumbnail {
+            networking.loadImage(image: image) { image in
+                DispatchQueue.main.async {
+                    cell.articleImage.image = image
+                }
+            }
+        }
         
         return cell
     }
-
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        self.performSegue(withIdentifier: "showDetail", sender: indexPath);
+    }
+    
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         // Return false if you do not want the specified item to be editable.
         return true

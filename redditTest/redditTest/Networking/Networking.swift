@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 class Networking {
     
@@ -27,6 +28,17 @@ class Networking {
             } catch let err {
                 print("Err", err)
                 taskCallback([])
+            }
+            }.resume()
+    }
+    
+    func loadImage(image: String, imageLoaded: @escaping (UIImage) -> ()) {
+        let url = URL(string: image)
+        let request = URLRequest(url: url!)
+        
+        URLSession.shared.dataTask(with: request as URLRequest){ data,response,error in
+            if let data = data, let img: UIImage = UIImage(data: data) {
+                imageLoaded(img)
             }
             }.resume()
     }
