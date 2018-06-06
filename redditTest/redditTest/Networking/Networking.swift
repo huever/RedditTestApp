@@ -11,8 +11,8 @@ import UIKit
 
 class Networking {
     
-    func getTopPost(taskCallback: @escaping ([Article]) -> ())  {
-        let redditUrl = URL(string: "https://www.reddit.com/r/popular/top.json")
+    func getTopPost(after: String = "", taskCallback: @escaping (ResposeData) -> ())  {
+        let redditUrl = URL(string: "https://www.reddit.com/r/popular/top.json?after=\(after)")
         
         URLSession.shared.dataTask(with: redditUrl!) { (data, response
             , error) in
@@ -22,12 +22,12 @@ class Networking {
             do {
                 let decoder = JSONDecoder()
                 let redditData = try decoder.decode(RedditBase.self, from: data)
-                let data = redditData.data.children
+                let data = redditData.data
                 
                 taskCallback(data)
             } catch let err {
                 print("Err", err)
-                taskCallback([])
+                
             }
             }.resume()
     }

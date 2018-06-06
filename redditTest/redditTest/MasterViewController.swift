@@ -13,6 +13,12 @@ class MasterViewController: UITableViewController {
     var detailViewController: DetailViewController? = nil
     var networking: Networking = Networking()
     var articles : [Article] = []
+    var cache: NSCache<AnyObject, AnyObject>!
+    
+    let dateFormatter = DateFormatter()
+    let defaults = UserDefaults.standard
+    let arrayOfObjectsKey = "arrayOfObjectsKey"
+    var nextPage: String = ""
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -21,6 +27,7 @@ class MasterViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        self.cache = NSCache()
         
         tableView.register(UINib(nibName: "DetailCell", bundle: nil), forCellReuseIdentifier: "DetailCell")
         if let split = splitViewController {
@@ -28,8 +35,11 @@ class MasterViewController: UITableViewController {
             detailViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? DetailViewController
         }
         
-        networking.getTopPost() { articlesData in
-            self.articles = articlesData
+        networking.getTopPost(after: "") { articlesData in
+            self.articles = articlesData.children
+            if let after = articlesData.after {
+                self.nextPage = after
+            }
             DispatchQueue.main.async {
                 self.tableView.reloadData()
             }
@@ -53,7 +63,7 @@ class MasterViewController: UITableViewController {
             if let indexPath = tableView.indexPathForSelectedRow {
                 let object = articles[indexPath.row] 
                 let controller = (segue.destination as! UINavigationController).topViewController as! DetailViewController
-                controller.detailItem = object
+                controller.articleData = object.data
                 tableView.deselectRow(at: indexPath, animated: false)
             }
             
@@ -84,17 +94,25 @@ class MasterViewController: UITableViewController {
             cell.comments.text = String.init(format: NSLocalizedString("%d comments", comment: ""), numComments)
         }
         
+        if let dateCreated = object.createdUTC {
+            cell.created.text = dateFormatter.timeSince(from: NSDate(timeIntervalSince1970: TimeInterval(dateCreated)))
+        }
         
-        let dateFormatter = DateFormatter()
-        cell.created.text = dateFormatter.timeSince(from: NSDate(timeIntervalSince1970: TimeInterval(object.createdUTC!)), numericDates: true)
         cell.author.text = object.author
-    
-        if let image = object.thumbnail {
-            networking.loadImage(image: image) { image in
-                DispatchQueue.main.async {
-                    cell.articleImage.image = image
+        
+        if let imageUrl = object.thumbnail {
+            if (self.cache.object(forKey: imageUrl as AnyObject) != nil) {
+                cell.articleImage.image = self.cache.object(forKey: imageUrl as AnyObject) as? UIImage
+            } else {
+                networking.loadImage(image: imageUrl) { image in
+                    DispatchQueue.main.async {
+                        cell.articleImage.image = image
+                        self.cache.setObject(image, forKey: imageUrl as AnyObject)
+                    }
                 }
             }
+        } else {
+            cell.articleImage.image = UIImage(named: "NoImage")
         }
         
         return cell
@@ -117,6 +135,18 @@ class MasterViewController: UITableViewController {
         }
     }
 
-
+    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        if indexPath.row + 1 == articles.count {
+            networking.getTopPost(after: nextPage) { articlesData in
+                self.articles += articlesData.children
+                if let after = articlesData.after {
+                    self.nextPage = after
+                }
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
+            }
+        }
+    }
 }
 

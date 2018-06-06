@@ -11,17 +11,33 @@ import UIKit
 class DetailViewController: UIViewController {
 
     @IBOutlet weak var detailDescriptionLabel: UILabel!
-
-
+    @IBOutlet weak var articleImage: UIImageView!
+    @IBOutlet weak var articleTitle: UILabel!
+    @IBOutlet weak var totalComments: UILabel!
+    
+    var networking: Networking = Networking()
+    var articleData: ArticleData?
+    
     func configureView() {
         // Update the user interface for the detail item.
-        if let detail = detailItem {
-            if let label = detailDescriptionLabel {
-                label.text = detail.data.title
-            }
+        
+        articleTitle.text = articleData?.title
+        if let numComments = articleData?.numComments {
+            totalComments.text = String.init(format: NSLocalizedString("%d comments", comment: ""), numComments)
         }
         
-        self.title = detailItem?.data.title
+        self.title = articleData?.author
+        
+        if let image = articleData?.preview?.images.first?.source.url {
+            networking.loadImage(image: image) { image in
+                DispatchQueue.main.async {
+                    self.articleImage.image = image
+                }
+            }
+        } else {
+            self.articleImage.image = UIImage(named: "NoImage")
+        }
+        
     }
 
     override func viewDidLoad() {
