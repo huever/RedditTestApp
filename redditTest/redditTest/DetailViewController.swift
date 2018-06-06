@@ -13,7 +13,7 @@ class DetailViewController: UIViewController {
     @IBOutlet weak var detailDescriptionLabel: UILabel!
     @IBOutlet weak var articleImage: UIImageView!
     @IBOutlet weak var articleTitle: UILabel!
-    @IBOutlet weak var totalComments: UILabel!
+    @IBOutlet weak var backgroundImage: UIImageView!
     
     var networking: Networking = Networking()
     var articleData: ArticleData?
@@ -22,16 +22,13 @@ class DetailViewController: UIViewController {
         // Update the user interface for the detail item.
         
         articleTitle.text = articleData?.title
-        if let numComments = articleData?.numComments {
-            totalComments.text = String.init(format: NSLocalizedString("%d comments", comment: ""), numComments)
-        }
-        
         self.title = articleData?.author
         
         if let image = articleData?.preview?.images.first?.source.url {
             networking.loadImage(image: image) { image in
                 DispatchQueue.main.async {
                     self.articleImage.image = image
+                    self.backgroundImage.image = image
                 }
             }
         } else {
